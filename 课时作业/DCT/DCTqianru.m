@@ -1,0 +1,10 @@
+image=imread('C:\\Users\\Administrator\\Desktop\\1.bmp');
+imagegoal='C:\\Users\\Administrator\\Desktop\\3.bmp';
+msg='C:\\Users\\Administrator\\Desktop\\1.txt';
+key=153; 
+alpha=1;
+[count,msg,result] = hidedctadv(image,imagegoal,msg,key,alpha); 
+count=16;
+subplot(111);
+imshow(result);
+title('ÒþÐ´ºó');

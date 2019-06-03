@@ -1,0 +1,11 @@
+C='1.bmp';
+M='1.txt';
+C1=imread(C);
+[row,col]=size(C1);
+k=100;
+%嵌入消息，使用函数lsbsuijiqianru
+[C_M,C_C,L]=lsbsuijiqianru(C,M,k);
+%将载密图像保存到lsbshuijiqianru.bmp中
+imwrite(C_M,'lsbshuijiqianru.bmp','bmp');
+%提取消息，使用函数lsbsuijitiqu
+lsbsuijitiqu('lsbshuijiqianru.bmp',L,k);

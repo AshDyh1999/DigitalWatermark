@@ -1,0 +1,31 @@
+%文件名：plotblurring.m
+%程序员：李鹏
+%编写时间：2004.4.1
+%函数功能：本函数用于绘制加有水印的图像进行模糊处理后，检测相关性值的曲线
+%输入格式举例：plotblurring('test.png',20,'lenna.jpg',10,'db6',2,0.1,0.99);
+%函数说明：
+%横坐标表示模糊的次数，纵坐标为相关性值
+%参数说明：
+%参数说明：
+%test为已经加入水印的待检测图像
+%x为处理图像模板的最大值
+%original为输入原始图像
+%seed为随机数种子
+%wavelet为使用的小波函数
+%level为小波分解的尺度
+%alpha为水印强度
+%ratio为算法中d/n的比例
+%x为模糊处理的最大次数
+function plotblurring(test,x,original,seed,wavelet,level,alpha,ratio)
+quality=1:1:x;
+corr_coef=zeros(max(size(quality)),1);
+count=0;
+for q=quality
+      count=count+1;
+      image_opd=blurringL16(test,q);
+      imwrite(image_opd,'temp2.png','BitDepth',16);
+     [corr_coef(count),corr_DCTcoef(count)]=wavedetect('temp2.png',original,seed,wavelet,level,alpha,ratio);
+end
+plot(quality,abs(corr_DCTcoef));
+xlabel('模糊次数');
+ylabel('相关性值');

@@ -1,0 +1,88 @@
+message = imread('message.png');
+pic = imread('carrier.bmp');
+yuv=rgb2ycbcr(pic);   %将RGB模式的原图变成YUV模式
+yuv=double(yuv)/255;
+Y=yuv(:,:,1);    %分别获取三层，该层为灰度层
+U=yuv(:,:,2);      %因为人对亮度的敏感度大于对色彩的敏感度，因此水印嵌在色彩层上
+V=yuv(:,:,3);
+T=dctmtx(8);
+DCTyuv=blkproc(U,[8 8],'P1*x*P2',T,T');%将载体图像的灰度层分为8×8的小块，每一块内做二维DCT变换
+[m, n] = size(DCTyuv);
+T1 = 16;
+T2 = 20;
+S1 = 15000;
+S2 = 19000;
+j1 = 1;
+k1 = 1;
+DCTyuv_after=DCTyuv;
+for j = 1:+8:m
+    for k = 1:+8:n
+        temp = DCTyuv_after(j:j+7, k:k+7);
+        average = mean(temp(:));%均值
+        variance = var(temp(:));%方差
+        %亮度较低，纹理简单
+        if average < T1;
+            alpha = 0.01;
+        %亮度中等，纹理中等
+        elseif average>T1 && average<T2 && variance>S1 && variance<S2
+            alpha = 0.1;
+        %亮度比较高，纹理复杂，且不是边缘
+        elseif average>T2 && variance < S1
+            alpha = 0.6;
+        %亮度比较高，纹理复杂，且是边缘
+        elseif average>T2 && variance > S2
+            alpha = 0.1;
+        else
+            alpha = 1;
+        end
+        if message(j1, k1) == 1
+            DCTyuv_after(j+4,k+1) = DCTyuv_after(j+4,k+1)*(1+alpha*1);
+            DCTyuv_after(j+3,k+2) = DCTyuv_after(j+3,k+2)*(1+alpha*1);
+        end
+        k1 = k1+1;
+    end
+    k1 = 1;
+    j1 = j1+1;
+end
+result=blkproc(DCTyuv_after,[8 8],'P1*x*P2',T',T); 
+yuv_after=cat(3,Y,result,V);      %将经处理的色彩层和两个未处理的层合成
+rgb=ycbcr2rgb(yuv_after);    %使YUV图像变回RGB图像
+
+mark = rgb;
+yuv_mark=rgb2ycbcr(mark);   %将RGB模式的原图变成YUV模式
+yuv_mark=double(yuv_mark)/255;
+Y_mark=yuv_mark(:,:,1);    %分别获取三层，该层为灰度层
+U_mark=yuv_mark(:,:,2);      %因为人对亮度的敏感度大于对色彩的敏感度，因此水印嵌在色彩层上
+V_mark=yuv_mark(:,:,3);
+T=dctmtx(8);
+DCTyuv_mark=blkproc(U_mark,[8 8],'P1*x*P2',T,T');%将载体图像的灰度层分为8×8的小块，每一块内做二维DCT变换
+artwork = imread('carrier.bmp');
+yuv_artwork=rgb2ycbcr(artwork);   %将RGB模式的原图变成YUV模式
+yuv_artwork=double(yuv_artwork)/255;
+Y_artwork=yuv_artwork(:,:,1);    %分别获取三层，该层为灰度层
+U_artwork=yuv_artwork(:,:,2);      %因为人对亮度的敏感度大于对色彩的敏感度，因此水印嵌在色彩层上
+V_artwork=yuv_artwork(:,:,3);
+DCTyuv_artwork=blkproc(U_artwork,[8 8],'P1*x*P2',T,T');%将载体图像的灰度层分为8×8的小块，每一块内做二维DCT变换
+j1 = 1;
+k1 = 1;
+messages = ones(60);
+messages = logical(messages);
+[m, n] = size(DCTyuv_mark);
+for j = 1:+8:m
+    for k = 1:+8:n
+        if DCTyuv_mark(j+4,k+1) ~= DCTyuv_artwork(j+4,k+1) || DCTyuv_mark(j+3,k+2) ~= DCTyuv_artwork(j+3,k+2)
+            messages(j1, k1) = 1;
+        else
+            messages(j1, k1) = 0;
+        end
+        k1 = k1+1;
+    end
+    k1 = 1;
+    j1 = j1+1;
+end
+figure(1)
+subplot(2,1,1);
+imshow(messages),
+title('原始图像'); 
+subplot(2,1,2);
+imshow('message.png');
